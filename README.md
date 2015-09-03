@@ -13,4 +13,4 @@ Link to the competition: [San Francisco Crime Classification](https://www.kaggle
 The algorithm chosen for the implemented solution, is a [multinomial logistic regression](https://en.wikipedia.org/wiki/Multinomial_logistic_regression), a classification model based on regression where the dependent variable (what we want to predict) is categorical (opposite of continuous).
 
 # Report
-A written report is available at: [San Francisco Crime Classification - a Kaggle Competition](http://juandes.github.io/SFCrimeClassification-Spark/)
+A written report is available at: [San Francisco Crime Classification - a Kaggle Competition](http://juandes.github.io/SFCrimeClassification-Spark-LogisticRegression/)
