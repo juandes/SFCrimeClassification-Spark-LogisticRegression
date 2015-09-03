@@ -5,7 +5,7 @@ from pyspark.mllib.feature import HashingTF
 from pyspark.mllib.regression import LabeledPoint
 from pyspark.sql import SQLContext
 
-conf = SparkConf().setMaster("spark://Juande.local:7077").setAppName(
+conf = SparkConf().setMaster("spark://spark.master.url:7077").setAppName(
     "SFCrime-Kaggle"). \
     set("spark.executor.memory", "2g")
 sc = SparkContext(conf=conf)
