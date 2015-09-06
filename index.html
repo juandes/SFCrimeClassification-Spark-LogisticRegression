@@ -129,7 +129,53 @@ categories <span class="pl-k">=</span> {}
 <p>The first step was to get all the unique crime categories and add them to a dictionary, using the category as the key and an integer (the current size of the dictionary as the time of insertion), as a value. So, instead of using the category string as the response (what we want to predict), we are using an integer.
 ...</p>
 
-<p>Then, I created a <code>HashingTF</code> object which does a similar job do what I did with the dictionary. HashingTF maps a sequence of terms into an integer.</p>
+<p>Then, I created a <code>HashingTF</code> object which does a similar job do what I did with the dictionary; HashingTF maps a sequence of terms into an integer. We will use this object to convert the vectors of predictors into a vector of numeric values.</p>
+
+<div class="highlight highlight-python"><pre><span class="pl-c"># HashingTF transforms a string into a numerical value  </span>
+htf <span class="pl-k">=</span> HashingTF(<span class="pl-c1">5000</span>)</pre></div>
+
+<p>Now, we use Spark's <code>map</code> function to convert every observation of the dataset into a <code>LabeledPoint</code>, an object that contains a label and a vector (either sparse or dense) and that is used for classification in Spark.</p>
+
+<p>The features or predictors that I used for the model are the day of week when the incident occurred, the police district where it occurred and the hour.</p>
+
+<div class="highlight highlight-python"><pre><span class="pl-c"># Create LabeledPoint object</span>
+trainingData <span class="pl-k">=</span> train.map(<span class="pl-k">lambda</span> <span class="pl-smi">x</span>: LabeledPoint(categories[x.Category],
+                                                htf.transform(
+                                                    [x.DayOfWeek, x.PdDistrict,
+                                                     datetime.strptime(x.Dates,
+                                                                       <span class="pl-s"><span class="pl-pds">'</span><span class="pl-c1">%Y</span>-<span class="pl-c1">%m</span>-<span class="pl-c1">%d</span> <span class="pl-c1">%H</span>:<span class="pl-c1">%M</span>:<span class="pl-c1">%S</span><span class="pl-pds">'</span></span>).hour])))</pre></div>
+
+<h4>
+<a id="train-the-model-and-predict" class="anchor" href="#train-the-model-and-predict" aria-hidden="true"><span class="octicon octicon-link"></span></a>Train the model and predict.</h4>
+
+<p>After pre-processing the data, the next step is to train the model.</p>
+
+<div class="highlight highlight-python"><pre><span class="pl-c"># Train the model</span>
+logisticRegressionModel <span class="pl-k">=</span> LogisticRegressionWithLBFGS.train(trainingData,
+                                                            <span class="pl-smi">iterations</span><span class="pl-k">=</span><span class="pl-c1">100</span>,
+                                                            <span class="pl-smi">numClasses</span><span class="pl-k">=</span><span class="pl-c1">39</span>)</pre></div>
+
+<p>Note that this time I didn't checked the training error.</p>
+
+<p>This step is follow by preparing the test dataset in a similar way as the training one.</p>
+
+<div class="highlight highlight-python"><pre><span class="pl-c"># Prepare the testting dataset</span>
+testingSet <span class="pl-k">=</span> test.map(<span class="pl-k">lambda</span> <span class="pl-smi">x</span>: htf.transform([x.DayOfWeek, x.PdDistrict,
+                                               datetime.strptime(x.Dates,
+                                                                 <span class="pl-s"><span class="pl-pds">'</span><span class="pl-c1">%Y</span>-<span class="pl-c1">%m</span>-<span class="pl-c1">%d</span> <span class="pl-c1">%H</span>:<span class="pl-c1">%M</span>:<span class="pl-c1">%S</span><span class="pl-pds">'</span></span>).hour]))</pre></div>
+
+<p>And finally, we predict and save the result.</p>
+
+<div class="highlight highlight-python"><pre><span class="pl-c"># Predict using the day of the week and the police district and hour of crime</span>
+predictions <span class="pl-k">=</span> logisticRegressionModel.predict(testingSet)
+predictions.saveAsTextFile(<span class="pl-s"><span class="pl-pds">'</span>predictionsSpark<span class="pl-pds">'</span></span>)</pre></div>
+
+<h2>
+<a id="conclusion" class="anchor" href="#conclusion" aria-hidden="true"><span class="octicon octicon-link"></span></a>Conclusion</h2>
+
+<hr>
+
+<p>The score received this time, was a bit lower than my first attempt (26.78360 and 26.74064). Before I started working with this algorithm, my original plan was to calculate the predicted probability for each class, However, in Spark, this can be done in a binary classification problem and since in this problem, there are 39 possible outcomes, it wasn't going to work. So, sinceI had already written most of the code, I decided to continue forward and finish it.</p>
       </section>
       <footer>
         <p>This project is maintained by <a href="https://github.com/juandes">juandes</a></p>
