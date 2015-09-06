@@ -85,7 +85,7 @@ train dataset.</li>
 <h4>
 <a id="setting-up-spark" class="anchor" href="#setting-up-spark" aria-hidden="true"><span class="octicon octicon-link"></span></a>Setting up Spark</h4>
 
-<p>The first lines of the script are for setting the configuration of Spark. The <code>setMaster(...)</code> parameter accept the URL of the master. Usually, I check for this URL on the Spark Web UI, available at <code>localhost:8080</code>. The second parameter is the name of the app, and the last one is the amount of memory per worker, which I set to 2 GB.</p>
+<p>The first lines of the script are for setting the configuration of Spark. The <code>setMaster(...)</code> parameter accept the URL of the master. Usually, I check for this URL on the Spark Web UI, available at <code>http://localhost:8080</code>. The second parameter is the name of the app, and the last one is the amount of memory per worker, which I set to 2 GB.</p>
 
 <div class="highlight highlight-python"><pre>conf <span class="pl-k">=</span> SparkConf().setMaster(<span class="pl-s"><span class="pl-pds">"</span>spark://spark.master.url:7077<span class="pl-pds">"</span></span>).setAppName(
     <span class="pl-s"><span class="pl-pds">"</span>SFCrime-Kaggle<span class="pl-pds">"</span></span>). \
@@ -96,7 +96,40 @@ sqlContext <span class="pl-k">=</span> SQLContext(sc)<span class="pl-c1">4</span
 <h4>
 <a id="loading-data-and-required-packages" class="anchor" href="#loading-data-and-required-packages" aria-hidden="true"><span class="octicon octicon-link"></span></a>Loading data and required packages</h4>
 
-<p>...</p>
+<p>For loading the train and test dataset (both csv files), I used the package [spark-csv][<a href="http://spark-packages.org/package/databricks/spark-csv">http://spark-packages.org/package/databricks/spark-csv</a>].</p>
+
+<p>To download the package and to add it to the project, use this command <code>$SPARK_HOME/bin/spark-shell --packages com.databricks:spark-csv_2.11:1.2.0-s_2.11</code> when using spark-shell, spark-submit or pyspark.</p>
+
+<p>Now, we load both files, and use <code>registerTempTable</code> on the train dataset, to run SQL statements on it.</p>
+
+<div class="highlight highlight-python"><pre><span class="pl-c"># Import both the train and test dataset and register them as tables</span>
+train <span class="pl-k">=</span> sqlContext.read.format(<span class="pl-s"><span class="pl-pds">'</span>com.databricks.spark.csv<span class="pl-pds">'</span></span>).options(
+    <span class="pl-smi">header</span><span class="pl-k">=</span><span class="pl-s"><span class="pl-pds">'</span>true<span class="pl-pds">'</span></span>) \
+    .load(<span class="pl-s"><span class="pl-pds">'</span>train.csv<span class="pl-pds">'</span></span>)
+train.registerTempTable(<span class="pl-s"><span class="pl-pds">'</span>train<span class="pl-pds">'</span></span>)
+
+test <span class="pl-k">=</span> sqlContext.read.format(<span class="pl-s"><span class="pl-pds">'</span>com.databricks.spark.csv<span class="pl-pds">'</span></span>).options(
+    <span class="pl-smi">header</span><span class="pl-k">=</span><span class="pl-s"><span class="pl-pds">'</span>true<span class="pl-pds">'</span></span>) \
+    .load(<span class="pl-s"><span class="pl-pds">'</span>test.csv<span class="pl-pds">'</span></span>)</pre></div>
+
+<h4>
+<a id="preparing-the-dataset" class="anchor" href="#preparing-the-dataset" aria-hidden="true"><span class="octicon octicon-link"></span></a>Preparing the dataset</h4>
+
+<p>After loading the datasets, my next step was to do some make some modifications on the training dataset and preparing it for the training phase.</p>
+
+<div class="highlight highlight-python"><pre><span class="pl-c"># Get all the unique categories and add them to a dictionary</span>
+crimeCategories <span class="pl-k">=</span> sqlContext.sql(
+    <span class="pl-s"><span class="pl-pds">'</span><span class="pl-k">SELECT DISTINCT</span> Category <span class="pl-k">FROM</span> train<span class="pl-pds">'</span></span>).collect()
+crimeCategories.sort()
+
+categories <span class="pl-k">=</span> {}
+<span class="pl-k">for</span> category <span class="pl-k">in</span> crimeCategories:
+    categories[category.Category] <span class="pl-k">=</span> <span class="pl-c1">float</span>(<span class="pl-c1">len</span>(categories))</pre></div>
+
+<p>The first step was to get all the unique crime categories and add them to a dictionary, using the category as the key and an integer (the current size of the dictionary as the time of insertion), as a value. So, instead of using the category string as the response (what we want to predict), we are using an integer.
+...</p>
+
+<p>Then, I created a <code>HashingTF</code> object which does a similar job do what I did with the dictionary. HashingTF maps a sequence of terms into an integer.</p>
       </section>
       <footer>
         <p>This project is maintained by <a href="https://github.com/juandes">juandes</a></p>
