@@ -36,7 +36,67 @@
 
 <hr>
 
-<p>Coming soon...</p>
+<p>The "San Francisco Crime Classification" challenge, is a <a href="https://www.kaggle.com">Kaggle</a> competition aimed to predict the category of the crimes that occurred in the city, given the time and location of the incident.</p>
+
+<p>In this post, I explain and outline my second solution to this challenge. This time
+using Spark and Python.</p>
+
+<p>Link to the competition: <a href="https://www.kaggle.com/c/sf-crime">San Francisco Crime Classification</a></p>
+
+<h2>
+<a id="learning-method" class="anchor" href="#learning-method" aria-hidden="true"><span class="octicon octicon-link"></span></a>Learning method</h2>
+
+<hr>
+
+<p>The algorithm chosen for the implemented solution, is a <a href="https://en.wikipedia.org/wiki/Multinomial_logistic_regression">multinomial logistic regression</a>, a classification model based on regression where the dependent variable (what we want to predict) is categorical (opposite of continuous).</p>
+
+<h2>
+<a id="data" class="anchor" href="#data" aria-hidden="true"><span class="octicon octicon-link"></span></a>Data</h2>
+
+<hr>
+
+<p>The competition provides two dataset: a train data set and a test dataset. The
+train dataset is made of 878049 observations and the test dataset, of 884262
+observations.</p>
+
+<p>Both of them contains incidents from January 1, 2003 to May 13, 2015.</p>
+
+<h3>
+<a id="data-fields" class="anchor" href="#data-fields" aria-hidden="true"><span class="octicon octicon-link"></span></a>Data fields</h3>
+
+<ul>
+<li>Dates : timestamp of the crime incident.</li>
+<li>Category: Category of the incident. Also, this is the variable we want to predict.
+This variable is available only in the train dataset.</li>
+<li>Descript: A short description of the incident. This variable is available only 
+in the train dataset.</li>
+<li>DayOfWeek: Day of the week where the incident occurred.</li>
+<li>PdDistrict: Police Department District</li>
+<li>Resolution: Outcome of the incident. This variable is available only in the 
+train dataset.</li>
+<li>Address: Address of the incident.</li>
+<li>X: Longitude</li>
+<li>Y: Latitude</li>
+</ul>
+
+<h2>
+<a id="model-development" class="anchor" href="#model-development" aria-hidden="true"><span class="octicon octicon-link"></span></a>Model development</h2>
+
+<h4>
+<a id="setting-up-spark" class="anchor" href="#setting-up-spark" aria-hidden="true"><span class="octicon octicon-link"></span></a>Setting up Spark</h4>
+
+<p>The first lines of the script are for setting the configuration of Spark. The <code>setMaster(...)</code> parameter accept the URL of the master. Usually, I check for this URL on the Spark Web UI, available at <code>localhost:8080</code>. The second parameter is the name of the app, and the last one is the amount of memory per worker, which I set to 2 GB.</p>
+
+<div class="highlight highlight-python"><pre>conf <span class="pl-k">=</span> SparkConf().setMaster(<span class="pl-s"><span class="pl-pds">"</span>spark://spark.master.url:7077<span class="pl-pds">"</span></span>).setAppName(
+    <span class="pl-s"><span class="pl-pds">"</span>SFCrime-Kaggle<span class="pl-pds">"</span></span>). \
+    <span class="pl-c1">set</span>(<span class="pl-s"><span class="pl-pds">"</span>spark.executor.memory<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>2g<span class="pl-pds">"</span></span>)
+sc <span class="pl-k">=</span> SparkContext(<span class="pl-smi">conf</span><span class="pl-k">=</span>conf)
+sqlContext <span class="pl-k">=</span> SQLContext(sc)<span class="pl-c1">4</span>w</pre></div>
+
+<h4>
+<a id="loading-data-and-required-packages" class="anchor" href="#loading-data-and-required-packages" aria-hidden="true"><span class="octicon octicon-link"></span></a>Loading data and required packages</h4>
+
+<p>...</p>
       </section>
       <footer>
         <p>This project is maintained by <a href="https://github.com/juandes">juandes</a></p>
