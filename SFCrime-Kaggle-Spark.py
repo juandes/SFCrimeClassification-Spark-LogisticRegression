@@ -20,7 +20,6 @@ train.registerTempTable('train')
 test = sqlContext.read.format('com.databricks.spark.csv').options(
     header='true') \
     .load('test.csv')
-test.registerTempTable('test')
 
 # Get all the unique categories and add them to a dictionary
 crimeCategories = sqlContext.sql(
