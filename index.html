@@ -89,22 +89,22 @@ train dataset.</li>
 
 <p>The first lines of the script are for setting the configuration of Spark. The <code>setMaster(...)</code> parameter accept the URL of the master. Usually, I check for this URL on the Spark Web UI, available at <code>http://localhost:8080</code>. The second parameter is the name of the app, and the last one is the amount of memory per worker, which I set to 2 GB.</p>
 
-<div class="highlight highlight-python"><pre>conf <span class="pl-k">=</span> SparkConf().setMaster(<span class="pl-s"><span class="pl-pds">"</span>spark://spark.master.url:7077<span class="pl-pds">"</span></span>).setAppName(
+<div class="highlight highlight-source-python"><pre>conf <span class="pl-k">=</span> SparkConf().setMaster(<span class="pl-s"><span class="pl-pds">"</span>spark://spark.master.url:7077<span class="pl-pds">"</span></span>).setAppName(
     <span class="pl-s"><span class="pl-pds">"</span>SFCrime-Kaggle<span class="pl-pds">"</span></span>). \
     <span class="pl-c1">set</span>(<span class="pl-s"><span class="pl-pds">"</span>spark.executor.memory<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>2g<span class="pl-pds">"</span></span>)
 sc <span class="pl-k">=</span> SparkContext(<span class="pl-smi">conf</span><span class="pl-k">=</span>conf)
-sqlContext <span class="pl-k">=</span> SQLContext(sc)<span class="pl-c1">4</span>w</pre></div>
+sqlContext <span class="pl-k">=</span> SQLContext(sc)</pre></div>
 
 <h4>
 <a id="loading-data-and-required-packages" class="anchor" href="#loading-data-and-required-packages" aria-hidden="true"><span class="octicon octicon-link"></span></a>Loading data and required packages</h4>
 
-<p>For loading the train and test dataset (both csv files), I used the package [spark-csv][<a href="http://spark-packages.org/package/databricks/spark-csv">http://spark-packages.org/package/databricks/spark-csv</a>].</p>
+<p>For loading the train and test dataset (both csv files), I used the package <a href="http://spark-packages.org/package/databricks/spark-csv">spark-csv</a>.</p>
 
 <p>To download the package and to add it to the project, use this command <code>$SPARK_HOME/bin/spark-shell --packages com.databricks:spark-csv_2.11:1.2.0-s_2.11</code> when using spark-shell, spark-submit or pyspark.</p>
 
 <p>Now, we load both files, and use <code>registerTempTable</code> on the train dataset, to run SQL statements on it.</p>
 
-<div class="highlight highlight-python"><pre><span class="pl-c"># Import both the train and test dataset and register them as tables</span>
+<div class="highlight highlight-source-python"><pre><span class="pl-c"># Import both the train and test dataset and register them as tables</span>
 train <span class="pl-k">=</span> sqlContext.read.format(<span class="pl-s"><span class="pl-pds">'</span>com.databricks.spark.csv<span class="pl-pds">'</span></span>).options(
     <span class="pl-smi">header</span><span class="pl-k">=</span><span class="pl-s"><span class="pl-pds">'</span>true<span class="pl-pds">'</span></span>) \
     .load(<span class="pl-s"><span class="pl-pds">'</span>train.csv<span class="pl-pds">'</span></span>)
@@ -119,7 +119,7 @@ test <span class="pl-k">=</span> sqlContext.read.format(<span class="pl-s"><span
 
 <p>After loading the datasets, my next step was to do some make some modifications on the training dataset and preparing it for the training phase.</p>
 
-<div class="highlight highlight-python"><pre><span class="pl-c"># Get all the unique categories and add them to a dictionary</span>
+<div class="highlight highlight-source-python"><pre><span class="pl-c"># Get all the unique categories and add them to a dictionary</span>
 crimeCategories <span class="pl-k">=</span> sqlContext.sql(
     <span class="pl-s"><span class="pl-pds">'</span><span class="pl-k">SELECT DISTINCT</span> Category <span class="pl-k">FROM</span> train<span class="pl-pds">'</span></span>).collect()
 crimeCategories.sort()
@@ -133,14 +133,14 @@ categories <span class="pl-k">=</span> {}
 
 <p>Then, I created a <code>HashingTF</code> object which does a similar job do what I did with the dictionary; HashingTF maps a sequence of terms into an integer. We will use this object to convert the vectors of predictors into a vector of numeric values.</p>
 
-<div class="highlight highlight-python"><pre><span class="pl-c"># HashingTF transforms a string into a numerical value  </span>
+<div class="highlight highlight-source-python"><pre><span class="pl-c"># HashingTF transforms a string into a numerical value  </span>
 htf <span class="pl-k">=</span> HashingTF(<span class="pl-c1">5000</span>)</pre></div>
 
 <p>Now, we use Spark's <code>map</code> function to convert every observation of the dataset into a <code>LabeledPoint</code>, an object that contains a label and a vector (either sparse or dense) and that is used for classification in Spark.</p>
 
 <p>The features or predictors that I used for the model are the day of week when the incident occurred, the police district where it occurred and the hour.</p>
 
-<div class="highlight highlight-python"><pre><span class="pl-c"># Create LabeledPoint object</span>
+<div class="highlight highlight-source-python"><pre><span class="pl-c"># Create LabeledPoint object</span>
 trainingData <span class="pl-k">=</span> train.map(<span class="pl-k">lambda</span> <span class="pl-smi">x</span>: LabeledPoint(categories[x.Category],
                                                 htf.transform(
                                                     [x.DayOfWeek, x.PdDistrict,
@@ -152,7 +152,7 @@ trainingData <span class="pl-k">=</span> train.map(<span class="pl-k">lambda</sp
 
 <p>After pre-processing the data, the next step is to train the model.</p>
 
-<div class="highlight highlight-python"><pre><span class="pl-c"># Train the model</span>
+<div class="highlight highlight-source-python"><pre><span class="pl-c"># Train the model</span>
 logisticRegressionModel <span class="pl-k">=</span> LogisticRegressionWithLBFGS.train(trainingData,
                                                             <span class="pl-smi">iterations</span><span class="pl-k">=</span><span class="pl-c1">100</span>,
                                                             <span class="pl-smi">numClasses</span><span class="pl-k">=</span><span class="pl-c1">39</span>)</pre></div>
@@ -161,14 +161,14 @@ logisticRegressionModel <span class="pl-k">=</span> LogisticRegressionWithLBFGS.
 
 <p>This step is follow by preparing the test dataset in a similar way as the training one.</p>
 
-<div class="highlight highlight-python"><pre><span class="pl-c"># Prepare the testting dataset</span>
+<div class="highlight highlight-source-python"><pre><span class="pl-c"># Prepare the testting dataset</span>
 testingSet <span class="pl-k">=</span> test.map(<span class="pl-k">lambda</span> <span class="pl-smi">x</span>: htf.transform([x.DayOfWeek, x.PdDistrict,
                                                datetime.strptime(x.Dates,
                                                                  <span class="pl-s"><span class="pl-pds">'</span><span class="pl-c1">%Y</span>-<span class="pl-c1">%m</span>-<span class="pl-c1">%d</span> <span class="pl-c1">%H</span>:<span class="pl-c1">%M</span>:<span class="pl-c1">%S</span><span class="pl-pds">'</span></span>).hour]))</pre></div>
 
 <p>And finally, we predict and save the result.</p>
 
-<div class="highlight highlight-python"><pre><span class="pl-c"># Predict using the day of the week and the police district and hour of crime</span>
+<div class="highlight highlight-source-python"><pre><span class="pl-c"># Predict using the day of the week and the police district and hour of crime</span>
 predictions <span class="pl-k">=</span> logisticRegressionModel.predict(testingSet)
 predictions.saveAsTextFile(<span class="pl-s"><span class="pl-pds">'</span>predictionsSpark<span class="pl-pds">'</span></span>)</pre></div>
 
